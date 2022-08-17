@@ -1,12 +1,15 @@
 package com.company;
 
-      import java.io.BufferedReader;
-        import java.io.IOException;
-        import java.io.InputStreamReader;
-        import java.net.HttpURLConnection;
-        import java.net.URL;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-public class PriceMain {
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class priceMain {
 
     public static void main(String[] args) {
         System.out.println("[HttpURLConnection 사용해  get 방식 데이터 요청 및 응답 값 확인 실시]");
@@ -19,10 +22,10 @@ public class PriceMain {
 
         //데이터 정의 실시
         String url = "http://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo";
-        String data = "resultType=json&ServiceKey=0tel5j%2B2K0SOzwcdFiF6yYbdmPR%2BrQr6Fp8YmYw8c%2Fu9Fem7nz8ex9XFnbwcw4St12SX6IgmSTtKKb0UaKl4CQ%3D%3D";
+        String params = "resultType=json&ServiceKey=0tel5j%2B2K0SOzwcdFiF6yYbdmPR%2BrQr6Fp8YmYw8c%2Fu9Fem7nz8ex9XFnbwcw4St12SX6IgmSTtKKb0UaKl4CQ%3D%3D";
 
         //메소드 호출 실시
-        httpGetConnection(url, data);
+        httpGetConnection(url, params);
 
     }//메인 종료
 
@@ -82,6 +85,9 @@ public class PriceMain {
             System.out.println("http 응답 코드 : "+responseCode);
             System.out.println("http 응답 데이터 : "+returnData);
 
+            //todo: Parse String -> Json
+            procJsonString(returnData);
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -96,4 +102,27 @@ public class PriceMain {
         }
     }
 
+    // Parsing json to internal data
+    public static void procJsonString(String Response) {
+        JSONObject jObject = new JSONObject(Response);
+        JSONObject resObject = jObject.getJSONObject("response");
+        JSONObject bodyObject = resObject.getJSONObject("body");
+
+        int numOfRows = bodyObject.getInt("numOfRows");
+        int pageNo = bodyObject.getInt("pageNo");
+        int totalCount = bodyObject.getInt("totalCount");
+
+        System.out.println("numOfRows: " + numOfRows);
+        System.out.println("pageNo: " + pageNo);
+        System.out.println("totalCount: " + totalCount);
+
+        JSONObject itemsObject = bodyObject.getJSONObject("items");
+        JSONArray itemArrObj = itemsObject.getJSONArray("item");
+        for (int i = 0; i < itemArrObj.length(); i++) {
+            JSONObject itemObject = itemArrObj.getJSONObject(i);
+            System.out.println("[" + i + "]");
+            System.out.println("basDt: " + itemObject.getString("basDt"));
+            System.out.println("itmsNm: " + itemObject.getString("itmsNm"));
+        }
+    }
 }//클래스 종료
