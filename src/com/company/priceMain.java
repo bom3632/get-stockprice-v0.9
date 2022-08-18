@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.*;
 
 public class priceMain {
 
@@ -27,7 +28,7 @@ public class priceMain {
         //메소드 호출 실시
         httpGetConnection(url, params);
 
-    }//메인 종료
+    }
 
     public static void httpGetConnection(String UrlData, String ParamData) {
 
@@ -85,10 +86,29 @@ public class priceMain {
             System.out.println("http 응답 코드 : "+responseCode);
             System.out.println("http 응답 데이터 : "+returnData);
 
-            //todo: Parse String -> Json
+            // Parse String -> Json
             procJsonString(returnData);
 
+            //  DB Connection Info
+            final String dbUrl = "jdbc:mysql://springboot-db.cqy5hke5r5w3.ap-northeast-2.rds.amazonaws.com:3306/stockinfo?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false";
+            final String userId = "admin";
+            final String passWord = "Cc270618!!";
+            DataBase DbObj = new DataBase(dbUrl, userId, passWord);
+
+            Connection dbConn = null; //접속을 위한 객체
+            Statement st = null;    //쿼리문을 보내기 위한 객체
+            dbConn = DriverManager.getConnection(DbObj.getURL(), DbObj.getUSER(), DbObj.getPASSWORD());
+            st = dbConn.createStatement();
+
+            ResultSet rs = st.executeQuery("show databases"); // ResultSet은 쿼리문을 보낸후 나온 결과를 가져올 때 사용한다.
+
+            while(rs.next()) {
+                System.out.println(rs.getString("Database"));
+            }
+
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             //http 요청 및 응답 완료 후 BufferedReader를 닫아줍니다
@@ -119,10 +139,10 @@ public class priceMain {
         JSONObject itemsObject = bodyObject.getJSONObject("items");
         JSONArray itemArrObj = itemsObject.getJSONArray("item");
         for (int i = 0; i < itemArrObj.length(); i++) {
-            JSONObject itemObject = itemArrObj.getJSONObject(i);
+            JSONObject itemObject = itemArrObj.getJSONObject(i);    // Stock Info Object
             System.out.println("[" + i + "]");
             System.out.println("basDt: " + itemObject.getString("basDt"));
             System.out.println("itmsNm: " + itemObject.getString("itmsNm"));
         }
     }
-}//클래스 종료
+}
